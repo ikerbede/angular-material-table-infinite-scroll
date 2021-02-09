@@ -1,6 +1,6 @@
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { MatPaginator } from "@angular/material/paginator";
-import { MatSort } from "@angular/material/sort";
+import { MatSort, Sort } from "@angular/material/sort";
 import { BehaviorSubject, Observable, of, Subscription } from "rxjs";
 import { IssueService } from "./issue.service";
 
@@ -19,7 +19,6 @@ export interface GithubIssue {
 export class IssuesDataSource extends DataSource<GithubIssue> {
   paginator: MatPaginator;
   sort: MatSort;
-  data: GithubIssue[] = [];
 
   private _cachedIssues: GithubIssue[] = [];
   private _dataStream = new BehaviorSubject<GithubIssue[]>(this._cachedIssues);
@@ -37,10 +36,37 @@ export class IssuesDataSource extends DataSource<GithubIssue> {
         // Fetch new page if scrolled too much
       })
     );
-    return of(this.data);
+
+    this.paginator.page.subscribe(() => this._getMoreIssues());
+    return this._dataStream.asObservable();
   }
 
   disconnect(): void {
     this._subscription.unsubscribe();
+  }
+
+  initIssues(sort?: MatSort) {
+    if (!this.sort && sort) {
+      this.sort = sort;
+    }
+    this._getIssues().subscribe(issues => {
+      this._cachedIssues = issues;
+      this._dataStream.next(issues);
+    });
+  }
+
+  private _getMoreIssues() {
+    this._getIssues().subscribe(issues => {
+      this._cachedIssues = this._cachedIssues.concat(...issues);
+      this._dataStream.next(this._cachedIssues);
+    });
+  }
+
+  private _getIssues(): Observable<GithubIssue[]> {
+    return this._issueService.getGithubIssues(
+      this.sort.active,
+      this.sort.direction,
+      this.paginator.pageIndex
+    );
   }
 }

@@ -7,7 +7,6 @@ import {
 } from "@angular/core";
 import { MatPaginator, MatPaginatorIntl } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
-import { MatTableDataSource } from "@angular/material/table";
 import { Observable } from "rxjs";
 import { IssueService } from "./issue.service";
 import { GithubIssue, IssuesDataSource } from "./issues.models";
@@ -23,7 +22,6 @@ import { GithubIssue } from "./issues.models";
 })
 export class IssuesComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ["created", "state", "number", "title"];
-  data: GithubIssue[] = [];
   dataSource: IssuesDataSource;
 
   isLoadingIssues$ = this._issueService.isLoadingIssues$;
@@ -44,25 +42,25 @@ export class IssuesComponent implements OnInit, AfterViewInit {
     this.paginator.ngOnInit();
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
-    this.dataSource.data = this.data;
   }
 
   ngAfterViewInit() {
-    this._initIssues();
+
+    this.dataSource.initIssues(this.sort);
 
     // If the user changes the sort order, reset back to the first page.
     this.sort.sortChange.subscribe(() => {
       const elt = document.getElementById('table-container');
       elt?.scrollTop = 0; 
       this.paginator.pageIndex = 0;
-      this._initIssues();
+      this.dataSource.initIssues(this.sort);
     });
 
     this._issueService.nbTotalIssues$.subscribe(
       nbIssues => (this.paginator.length = nbIssues)
     );
 
-    this.paginator.page.subscribe(() => this._getMoreIssues());
+    
   }
 
   onScroll(event: UIEvent) {
@@ -73,23 +71,5 @@ export class IssuesComponent implements OnInit, AfterViewInit {
     ) {
       this.paginator.nextPage();
     }
-  }
-
-  private _initIssues() {
-    this._getIssues().subscribe(issues => (this.data = issues));
-  }
-
-  private _getMoreIssues() {
-    this._getIssues().subscribe(
-      issues => (this.data = this.data.concat(...issues))
-    );
-  }
-
-  private _getIssues(): Observable<GithubIssue[]> {
-    return this._issueService.getGithubIssues(
-      this.sort.active,
-      this.sort.direction,
-      this.paginator.pageIndex
-    );
   }
 }
