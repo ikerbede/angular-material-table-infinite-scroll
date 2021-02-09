@@ -33,7 +33,6 @@ export class IssuesDataSource extends DataSource<GithubIssue> {
   ): Observable<GithubIssue[] | ReadonlyArray<GithubIssue>> {
     this._subscription.add(
       collectionViewer.viewChange.subscribe(range => {
-
         // Fetch new page if scrolled too much
         const currentPage = this._getPageForIndex(range.end);
         if (currentPage > this.lastPage) {
@@ -52,12 +51,7 @@ export class IssuesDataSource extends DataSource<GithubIssue> {
   private lastPage = 0;
 
   private _fetchPage(): void {
-    for (let i = 0; i < this.pageSize; ++i) {
-      this.factService.getRandomFact().subscribe(res => {
-        this.cachedFacts = this.cachedFacts.concat(res);
-        this.dataStream.next(this.cachedFacts);
-      });
-    }
+    // Fetch page
   }
 
   private _getPageForIndex(i: number): number {

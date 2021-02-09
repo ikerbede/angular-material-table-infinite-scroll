@@ -9,7 +9,6 @@ import { MatPaginator, MatPaginatorIntl } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { Observable } from "rxjs";
-import { distinctUntilChanged,  shareReplay } from "rxjs/operators";
 import { IssueService } from "./issue.service";
 import { GithubIssue } from "./issues.models";
 import { GithubIssue } from "./issues.models";
@@ -27,18 +26,8 @@ export class IssuesComponent implements OnInit, AfterViewInit {
   data: GithubIssue[] = [];
   dataSource: MatTableDataSource<GithubIssue> = new MatTableDataSource();
 
-  isLoadingIssues$ = this._issueService.isLoadingIssues$
-    .asObservable()
-    .pipe(
-      distinctUntilChanged(),
-      shareReplay(1)
-    );
-  isRateLimitReached$ = this._issueService.isRateLimitReached$
-    .asObservable()
-    .pipe(
-      distinctUntilChanged(),
-      shareReplay(1)
-    );
+  isLoadingIssues$ = this._issueService.isLoadingIssues$;
+  isRateLimitReached$ = this._issueService.isRateLimitReached$;
 
   paginator: MatPaginator = new MatPaginator(new MatPaginatorIntl(), this._cdr);
   @ViewChild(MatSort) sort: MatSort;
@@ -67,9 +56,9 @@ export class IssuesComponent implements OnInit, AfterViewInit {
       this._initIssues();
     });
 
-    this._issueService.nbTotalIssues$
-      .pipe(distinctUntilChanged())
-      .subscribe(nbIssues => (this.paginator.length = nbIssues));
+    this._issueService.nbTotalIssues$.subscribe(
+      nbIssues => (this.paginator.length = nbIssues)
+    );
 
     this.paginator.page.subscribe(() => this._getMoreIssues());
   }
