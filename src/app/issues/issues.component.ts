@@ -27,19 +27,21 @@ export class IssuesComponent implements OnInit, AfterViewInit {
   data: GithubIssue[] = [];
   dataSource: MatTableDataSource<GithubIssue> = new MatTableDataSource();
 
-  isLoadingIssues$ = this._issueService.isLoadingIssues$.pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
-  isRateLimitReached$ = this._issueService.isRateLimitReached$.pipe(
-    distinctUntilChanged(),
-    shareReplay(1)
-  );
+  isLoadingIssues$ = this._issueService.isLoadingIssues$
+    .asObservable()
+    .pipe(
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
+  isRateLimitReached$ = this._issueService.isRateLimitReached$
+    .asObservable()
+    .pipe(
+      distinctUntilChanged(),
+      shareReplay(1)
+    );
 
   paginator: MatPaginator = new MatPaginator(new MatPaginatorIntl(), this._cdr);
   @ViewChild(MatSort) sort: MatSort;
-
-  private readonly PAGE_SIZE = 30;
 
   constructor(
     private _cdr: ChangeDetectorRef,
@@ -47,7 +49,7 @@ export class IssuesComponent implements OnInit, AfterViewInit {
   ) {}
 
   ngOnInit() {
-    this.paginator.pageSize = this.PAGE_SIZE;
+    this.paginator.pageSize = IssueService.PAGE_SIZE;
     this.paginator.ngOnInit();
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
@@ -75,8 +77,8 @@ export class IssuesComponent implements OnInit, AfterViewInit {
   onScroll(event: UIEvent) {
     const elem = event.currentTarget as Element;
     if (
-      elem.scrollTop + 500 >= (this.paginator.pageIndex + 1) * this.PAGE_SIZE * 48 &&
-      (this.paginator.pageIndex + 1) * this.PAGE_SIZE <= this.paginator.length
+      elem.scrollTop + 500 >= (this.paginator.pageIndex + 1) * IssueService.PAGE_SIZE * 48 &&
+      (this.paginator.pageIndex + 1) * IssueService.PAGE_SIZE <= this.paginator.length
     ) {
       this.paginator.nextPage();
     }

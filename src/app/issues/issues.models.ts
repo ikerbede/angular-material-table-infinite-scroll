@@ -1,5 +1,8 @@
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
+import { MatPaginator } from "@angular/material/paginator";
+import { MatSort } from "@angular/material/sort";
 import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { IssueService } from "./issue.service";
 
 export interface GithubApi {
   items: GithubIssue[];
@@ -13,44 +16,51 @@ export interface GithubIssue {
   title: string;
 }
 
-export class IssuesDataSource extends DataSource<GithubIssue | undefined> {
+export class IssuesDataSource extends DataSource<GithubIssue> {
+  paginator: MatPaginator;
+  sort: MatSort;
+
   private _cachedIssues = Array.from<GithubIssue>({ length: 0 });
-  private _dataStream = new BehaviorSubject<(GithubIssue | undefined)[]>(this._cachedIssues);
+  private _dataStream = new BehaviorSubject<GithubIssue[]>(this._cachedIssues);
   private _subscription = new Subscription();
 
-  constructor(private factService: FactService) {
+  constructor(private _issueService: IssueService) {
     super();
   }
 
-  connect(collectionViewer: CollectionViewer): Observable<(GithubIssue | undefined)[] | ReadonlyArray<GithubIssue | undefined>> {
-    this._subscription.add(collectionViewer.viewChange.subscribe(range => {
-      const currentPage = this._getPageForIndex(range.end);
+  connect(
+    collectionViewer: CollectionViewer
+  ): Observable<GithubIssue[] | ReadonlyArray<GithubIssue>> {
+    this._subscription.add(
+      collectionViewer.viewChange.subscribe(range => {
 
-      if (currentPage > this.lastPage) {
-        this.lastPage = currentPage;
-        this._fetchPage();
-      }
-    }));
+        // Fetch new page if scrolled too much
+        const currentPage = this._getPageForIndex(range.end);
+        if (currentPage > this.lastPage) {
+          this.lastPage = currentPage;
+          this._fetchPage();
+        }
+      })
+    );
     return this._dataStream;
   }
 
-  disconnect(collectionViewer: CollectionViewer): void {
+  disconnect(): void {
     this._subscription.unsubscribe();
   }
 
-  private pageSize = 10;
-private lastPage = 0;
+  private lastPage = 0;
 
-private _fetchPage(): void {
-  for (let i = 0; i < this.pageSize; ++i) {
-    this.factService.getRandomFact().subscribe(res => {
-      this.cachedFacts = this.cachedFacts.concat(res);
-      this.dataStream.next(this.cachedFacts);
-    });
+  private _fetchPage(): void {
+    for (let i = 0; i < this.pageSize; ++i) {
+      this.factService.getRandomFact().subscribe(res => {
+        this.cachedFacts = this.cachedFacts.concat(res);
+        this.dataStream.next(this.cachedFacts);
+      });
+    }
   }
-}
 
-private _getPageForIndex(i: number): number {
-  return Math.floor(i / this.pageSize);
-}
+  private _getPageForIndex(i: number): number {
+    return Math.floor(i / IssueService.PAGE_SIZE);
+  }
 }

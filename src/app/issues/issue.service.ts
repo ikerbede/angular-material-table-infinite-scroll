@@ -7,6 +7,8 @@ import { GithubApi } from "./issues.models";
 
 @Injectable({ providedIn: "root" })
 export class IssueService {
+  static readonly PAGE_SIZE = 30;
+
   nbTotalIssues$ = new BehaviorSubject<number>(0);
   isLoadingIssues$ = new BehaviorSubject<boolean>(false);
   isRateLimitReached$ = new BehaviorSubject<boolean>(false);
