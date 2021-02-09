@@ -10,7 +10,7 @@ import { MatSort } from "@angular/material/sort";
 import { MatTableDataSource } from "@angular/material/table";
 import { Observable } from "rxjs";
 import { IssueService } from "./issue.service";
-import { GithubIssue } from "./issues.models";
+import { GithubIssue, IssuesDataSource } from "./issues.models";
 import { GithubIssue } from "./issues.models";
 
 /**
@@ -24,7 +24,7 @@ import { GithubIssue } from "./issues.models";
 export class IssuesComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ["created", "state", "number", "title"];
   data: GithubIssue[] = [];
-  dataSource: MatTableDataSource<GithubIssue> = new MatTableDataSource();
+  dataSource: IssuesDataSource;
 
   isLoadingIssues$ = this._issueService.isLoadingIssues$;
   isRateLimitReached$ = this._issueService.isRateLimitReached$;
@@ -35,7 +35,9 @@ export class IssuesComponent implements OnInit, AfterViewInit {
   constructor(
     private _cdr: ChangeDetectorRef,
     private _issueService: IssueService
-  ) {}
+  ) {
+    this.dataSource = new IssuesDataSource(this._issueService);
+  }
 
   ngOnInit() {
     this.paginator.pageSize = IssueService.PAGE_SIZE;

@@ -1,7 +1,7 @@
 import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { MatPaginator } from "@angular/material/paginator";
 import { MatSort } from "@angular/material/sort";
-import { BehaviorSubject, Observable, Subscription } from "rxjs";
+import { BehaviorSubject, Observable, of, Subscription } from "rxjs";
 import { IssueService } from "./issue.service";
 
 export interface GithubApi {
@@ -19,8 +19,9 @@ export interface GithubIssue {
 export class IssuesDataSource extends DataSource<GithubIssue> {
   paginator: MatPaginator;
   sort: MatSort;
+  data: GithubIssue[] = [];
 
-  private _cachedIssues = Array.from<GithubIssue>({ length: 0 });
+  private _cachedIssues: GithubIssue[] = [];
   private _dataStream = new BehaviorSubject<GithubIssue[]>(this._cachedIssues);
   private _subscription = new Subscription();
 
@@ -34,27 +35,12 @@ export class IssuesDataSource extends DataSource<GithubIssue> {
     this._subscription.add(
       collectionViewer.viewChange.subscribe(range => {
         // Fetch new page if scrolled too much
-        const currentPage = this._getPageForIndex(range.end);
-        if (currentPage > this.lastPage) {
-          this.lastPage = currentPage;
-          this._fetchPage();
-        }
       })
     );
-    return this._dataStream;
+    return of(this.data);
   }
 
   disconnect(): void {
     this._subscription.unsubscribe();
-  }
-
-  private lastPage = 0;
-
-  private _fetchPage(): void {
-    // Fetch page
-  }
-
-  private _getPageForIndex(i: number): number {
-    return Math.floor(i / IssueService.PAGE_SIZE);
   }
 }
